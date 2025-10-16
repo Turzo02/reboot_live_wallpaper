@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hacker Loading Screen</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Apply a global font */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow: hidden; /* Prevent scrolling due to animations */
+        }
+
+        /* Keyframes for line flickering (opacity and subtle transform) */
+        @keyframes flicker {
+            0%, 100% { opacity: 0.1; transform: scaleY(0.1); }
+            50% { opacity: 0.8; transform: scaleY(1.5); }
+            25%, 75% { opacity: 0.5; transform: scaleY(0.5); }
+        }
+
+        /* Keyframes for line stretching */
+        @keyframes stretch {
+            0%, 100% { transform: scaleY(0.2); }
+            50% { transform: scaleY(1.2); }
+        }
+
+        /* Keyframes for general text/border flickering */
+        @keyframes text-flicker {
+            0%, 19.99%, 22%, 62.99%, 64%, 69.99%, 72%, 77.99%, 80%, 100% {
+                opacity: 0.9; /* FLICKER_OPACITY_MAX */
+                text-shadow: 0 0 7px rgba(0,255,0,0.7);
+            }
+            20%, 21.99%, 63%, 63.99%, 70%, 71.99%, 78%, 79.99% {
+                opacity: 0.2; /* FLICKER_OPACITY_MIN */
+                text-shadow: none;
+            }
+        }
+
+        /* Keyframes for border flickering */
+        @keyframes border-flicker {
+            0%, 19.99%, 22%, 62.99%, 64%, 69.99%, 72%, 77.99%, 80%, 100% {
+                border-color: #34D399; /* green-400 */
+                box-shadow: 0 0 10px #34D399, 0 0 20px #10B981; /* green-400, green-500 */
+            }
+            20%, 21.99%, 63%, 63.99%, 70%, 71.99%, 78%, 79.99% {
+                border-color: #10B981; /* green-500 */
+                box-shadow: none;
+            }
+        }
+
+        /* Apply flicker animation to text elements */
+        .flicker-text {
+            animation: text-flicker calc(0.05s * 20) linear infinite alternate; /* Slower flicker for text */
+        }
+
+        /* Apply flicker animation to the border container */
+        .flicker-border {
+            animation: border-flicker calc(0.05s * 30) linear infinite alternate; /* Even slower flicker for border */
+        }
+
+        /* Base styles for the glitch lines - individual styling handled by JS */
+        .glitch-line {
+            filter: brightness(1.5); /* Make lines brighter */
+            /* Ensure smooth animation for properties changed by JS */
+            transition: height 0.1s ease-out, transform 0.1s ease-out, opacity 0.1s ease-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-950 text-green-400 font-mono overflow-hidden relative flex flex-col items-center justify-center p-4">
+
+    <!-- Background glitch lines container -->
+    <div id="glitch-lines-container" class="absolute inset-0 z-0 opacity-50">
+        <!-- Lines will be dynamically added here by JavaScript -->
+    </div>
+
+    <!-- Main content container (text and borders) -->
+    <div class="relative z-10 p-8 border-4 border-green-700 rounded-lg shadow-lg bg-gray-900 bg-opacity-70 backdrop-blur-sm flicker-border">
+        <!-- Blinking hacker text -->
+        <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold text-center mb-4 leading-tight flicker-text">
+            <span class="text-red-500">[</span> SYSTEM REBOOTING <span class="text-red-500">]</span>
+        </h1>
+        <p class="text-lg sm:text-xl text-center flicker-text">
+            Initiating secure protocol handshake...
+        </p>
+        <p class="text-md sm:text-lg text-center mt-2 flicker-text">
+            Establishing encrypted connection...
+        </p>
+        <p class="text-sm sm:text-base text-center mt-4 flicker-text">
+            <span class="animate-pulse">_</span>
+        </p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const linesContainer = document.getElementById('glitch-lines-container');
+            let lines = []; // Array to store references to the line DOM elements
+
+            // Constants for styling and animation (replicated from React version)
+            const NUM_LINES = 100;
+            const BASE_ANIM_DURATION = 0.5;
+            const MAX_ANIM_RANDOMNESS = 0.8;
+            const FLICKER_DURATION = 0.05; // Note: This is used in CSS calc()
+
+            // Function to generate a random number within a range
+            const getRandom = (min, max) => Math.random() * (max - min) + min;
+
+            // Function to create and append initial lines
+            const createInitialLines = () => {
+                for (let i = 0; i < NUM_LINES; i++) {
+                    const line = document.createElement('div');
+                    line.className = 'absolute bg-green-500 rounded-sm glitch-line';
+                    
+                    // Set initial random styles
+                    line.style.left = `${getRandom(0, 100)}%`;
+                    line.style.width = `${getRandom(1, 3)}px`;
+                    line.style.height = `${getRandom(20, 100)}%`;
+                    line.style.transformOrigin = 'bottom';
+                    line.style.transform = `scaleY(${getRandom(0.1, 1.5)})`;
+                    line.style.opacity = `${getRandom(0.1, 0.8)}`;
+                    line.style.animationDelay = `${getRandom(0, 2)}s`;
+                    
+                    // Assign random animation duration
+                    const animDuration = getRandom(BASE_ANIM_DURATION - MAX_ANIM_RANDOMNESS, BASE_ANIM_DURATION + MAX_ANIM_RANDOMNESS);
+                    line.style.animationDuration = `${animDuration}s`; // Used for flicker and stretch
+                    
+                    // Apply blur and glow filter
+                    line.style.filter = `blur(${getRandom(0.1, 0.5)}px) drop-shadow(0 0 ${getRandom(1, 3)}px rgba(0,255,0,0.5))`;
+
+                    linesContainer.appendChild(line);
+                    lines.push(line); // Store reference to the created line element
+                }
+            };
+
+            // Function to update line properties dynamically
+            const updateLineProperties = () => {
+                lines.forEach(line => {
+                    // Update height to simulate stretching/shrinking
+                    line.style.height = `${getRandom(20, 100)}%`;
+                    // Update scaleY for dynamic stretching
+                    line.style.transform = `scaleY(${getRandom(0.1, 1.5)})`;
+                    // Update opacity for flickering
+                    line.style.opacity = `${getRandom(0.1, 0.8)}`;
+                    // Update animation delay to keep the glitches random
+                    line.style.animationDelay = `${getRandom(0, 2)}s`;
+                    // Update animation duration for more varied glitching
+                    const animDuration = getRandom(BASE_ANIM_DURATION - MAX_ANIM_RANDOMNESS, BASE_ANIM_DURATION + MAX_ANIM_RANDOMNESS);
+                    line.style.animationDuration = `${animDuration}s`;
+                    // Update filter for more subtle variations
+                    line.style.filter = `blur(${getRandom(0.1, 0.5)}px) drop-shadow(0 0 ${getRandom(1, 3)}px rgba(0,255,0,0.5))`;
+                });
+            };
+
+            // Initialize lines
+            createInitialLines();
+
+            // Set up an interval to periodically update line properties for dynamic glitching
+            setInterval(updateLineProperties, 150); // Update lines every 150ms for a rapid glitch effect
+        });
+    </script>
+</body>
+</html>
